@@ -15,16 +15,17 @@ class User extends Authenticatable
      * Kolom yang boleh diisi secara mass-assignment.
      * Ini mencegah vulnerability mass-assignment.
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'avatar',
-        'google_id',
-        'phone',
-        'address',
-    ];
+protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'role',
+    'avatar',
+    'google_id',
+    'phone',
+    'address',
+];
+
 
     /**
      * Kolom yang disembunyikan saat serialisasi ke JSON/array.
