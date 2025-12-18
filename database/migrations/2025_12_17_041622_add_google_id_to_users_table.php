@@ -1,7 +1,8 @@
 <?php
+
 // ========================================
 // FILE: database/migrations/xxxx_add_google_id_to_users_table.php
-// FUNGSI: Menambahkan kolom untuk menyimpan Google user ID
+// FUNGSI: Menambahkan kolom untuk menyimpan Google user ID dan avatar
 // ========================================
 
 use Illuminate\Database\Migrations\Migration;
@@ -11,40 +12,33 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Jalankan migration (menambah kolom).
+     * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // ================================================
-            // KOLOM BARU UNTUK GOOGLE OAUTH
-            // ================================================
-
+            // Kolom untuk menyimpan Google ID (unik dari Google OAuth)
             $table->string('google_id')->nullable()->after('email');
-            // ↑ google_id = ID unik user dari Google
-            // nullable()  = Boleh kosong (untuk user yang register manual)
-            // after()     = Posisikan setelah kolom email
 
+            // Kolom untuk menyimpan URL avatar/foto profil dari Google
             $table->string('avatar')->nullable()->after('google_id');
-            // ↑ avatar = URL foto profil dari Google
-            // nullable() karena user manual mungkin tidak punya avatar
 
-            // ================================================
-            // INDEX UNTUK PERFORMA
-            // ================================================
+            // Index untuk mempercepat pencarian berdasarkan google_id
             $table->index('google_id');
-            // ↑ Index mempercepat pencarian WHERE google_id = '...'
         });
     }
 
     /**
-     * Rollback migration (hapus kolom).
+     * Reverse the migrations.
      */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex(['google_id']);  // Hapus index dulu
-            $table->dropColumn(['google_id', 'avatar']);  // Baru hapus kolom
+            // Hapus index terlebih dahulu (wajib sebelum drop column)
+            $table->dropIndex(['google_id']);
+
+            // Hapus kolom-kolom yang ditambahkan
+            $table->dropColumn(['google_id', 'avatar']);
         });
     }
 };
