@@ -54,7 +54,7 @@
 
                     {{-- Cart --}}
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ route('cart.index') }}">
+                        <a class="nav-link position-relative" href="">
                             <i class="bi bi-cart3"></i>
                             @php
                                 $cartCount = auth()->user()->cart?->items()->count() ?? 0;
