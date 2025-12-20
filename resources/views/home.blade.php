@@ -195,7 +195,7 @@
                 @foreach($featuredProducts as $product)
                     <div class="col-6 col-md-4 col-lg-3">
 
-                        @include('partials.product-card', ['product' => $product])
+                        @include('profile.partials.product-card', ['product' => $product])
                         {{-- ↑ INCLUDE DENGAN PASSING VARIABLE
 
                              Bentuk lengkap:

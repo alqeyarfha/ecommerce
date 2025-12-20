@@ -124,7 +124,7 @@
 </head>
 
 <body>
-    @include('partials.navbar')
+    @include('layouts.partials.navbar')
     {{-- ↑ DIRECTIVE @include() - Menyisipkan File Lain
 
          Sama seperti copy-paste isi file ke sini
@@ -145,7 +145,7 @@
          - @include: composition (menyisipkan partial/fragment) --}}
 
     <div class="container mt-3">
-        @include('partials.flash-messages')
+        @include('profile.partials.flash-messages')
     </div>
 
     <main class="min-vh-100">
@@ -165,7 +165,7 @@
              di dalam @section('content') child --}}
     </main>
 
-    @include('partials.footer')
+    @include('layouts.partials.footer')
 
     @stack('scripts')
     {{-- ↑ Tempat menumpuk JavaScript dari child
