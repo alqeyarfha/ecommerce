@@ -124,7 +124,7 @@
 </head>
 
 <body>
-    @include('layouts.partials.navbar')
+    @include('profile.partials.navbar')
     {{-- ↑ DIRECTIVE @include() - Menyisipkan File Lain
 
          Sama seperti copy-paste isi file ke sini
