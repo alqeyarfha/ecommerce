@@ -20,7 +20,7 @@ FUNGSI: Master layout untuk halaman admin
     <style>
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%);
+            background: linear-gradient(180deg, #0e6c98 0%, #143787 100%);
         }
 
         .sidebar .nav-link {
