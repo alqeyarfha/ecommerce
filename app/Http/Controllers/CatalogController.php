@@ -23,7 +23,7 @@ class CatalogController extends Controller
         // Mulai dengan produk aktif dan ada stok
         // ================================================
         $query = Product::query()
-            ->with(['category', 'primaryImage'])  // Eager load relasi
+            ->with(['category', 'primaryImage']) // Eager load relasi
             ->active()
             ->inStock();
 
@@ -32,7 +32,7 @@ class CatalogController extends Controller
         // Cari di nama dan deskripsi produk
         // ================================================
         if ($request->filled('q')) {
-            $query->search($request->q);  // Scope search di Model
+            $query->search($request->q); // Scope search di Model
         }
 
         // ================================================
@@ -40,7 +40,7 @@ class CatalogController extends Controller
         // Gunakan slug kategori, bukan ID
         // ================================================
         if ($request->filled('category')) {
-            $query->byCategory($request->category);  // Scope di Model
+            $query->byCategory($request->category); // Scope di Model
         }
 
         // ================================================
@@ -58,7 +58,7 @@ class CatalogController extends Controller
         // Hanya produk yang sedang diskon
         // ================================================
         if ($request->boolean('on_sale')) {
-            $query->onSale();  // Scope: discount_price < price
+            $query->onSale(); // Scope: discount_price < price
         }
 
         // ================================================
@@ -67,12 +67,12 @@ class CatalogController extends Controller
         // ================================================
         $sort = $request->get('sort', 'newest');
 
-        match($sort) {
-            'price_asc' => $query->orderBy('price', 'asc'),
+        match ($sort) {
+            'price_asc'  => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),
-            'name_asc' => $query->orderBy('name', 'asc'),
-            'name_desc' => $query->orderBy('name', 'desc'),
-            default => $query->latest(),  // newest
+            'name_asc'   => $query->orderBy('name', 'asc'),
+            'name_desc'  => $query->orderBy('name', 'desc'),
+            default      => $query->latest(), // newest
         };
 
         // ================================================
@@ -92,7 +92,7 @@ class CatalogController extends Controller
             ->orderBy('name')
             ->get();
 
-        // return view('catalog.index', compact('products', 'categories'));
+        return view('catalog.index', compact('products', 'categories'));
     }
 
     /**
@@ -106,10 +106,10 @@ class CatalogController extends Controller
         // Load semua relasi yang dibutuhkan
         // ================================================
         $product = Product::query()
-            ->with(['category', 'images'])  // Load semua gambar
+            ->with(['category', 'images']) // Load semua gambar
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->firstOrFail();  // 404 jika tidak ditemukan
+            ->firstOrFail(); // 404 jika tidak ditemukan
 
         // ================================================
         // PRODUK TERKAIT (RELATED)
@@ -118,7 +118,7 @@ class CatalogController extends Controller
         $relatedProducts = Product::query()
             ->with(['category', 'primaryImage'])
             ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)  // Kecuali produk ini
+            ->where('id', '!=', $product->id) // Kecuali produk ini
             ->active()
             ->inStock()
             ->take(4)

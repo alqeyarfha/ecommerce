@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage; // <--- BARIS INI YANG DITAMBAHKAN (PERBAIKAN UTAMA)
 
 class Product extends Model
 {

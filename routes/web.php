@@ -338,3 +338,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Route tambahan untuk AJAX Image Handling (jika diperlukan)
     // ...
 });
+
+Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
