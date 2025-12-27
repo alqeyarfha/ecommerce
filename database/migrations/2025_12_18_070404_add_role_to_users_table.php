@@ -9,16 +9,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('customer')->after('password');
-            // atau jika ingin lebih ketat:
-            // $table->enum('role', ['customer', 'admin'])->default('customer');
+            // Tambahkan kolom hanya jika belum ada
+            if (!Schema::hasColumn('users', 'role')) {
+                // Gunakan enum untuk lebih ketat dan aman
+                $table->enum('role', ['customer', 'admin'])
+                      ->default('customer')
+                      ->after('password');
+
+                // Opsional: tambah index jika sering query berdasarkan role
+                // $table->index('role');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+            if (Schema::hasColumn('users', 'role')) {
+                $table->dropColumn('role');
+            }
         });
     }
 };

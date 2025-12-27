@@ -6,41 +6,40 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-      Schema::create('orders', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained();
-    $table->string('order_number')->unique(); // ID unik, misal ORD-20231201-001
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // hapus order jika user dihapus
+            $table->string('order_number')->unique();
 
-    // Status Pesanan
-    $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
+            // Status pesanan
+            $table->enum('status', ['pending', 'processing', 'shipped', 'completed', 'cancelled'])
+                  ->default('pending');
 
-    // Status Pembayaran (PENTING: tambahkan ini)
-    $table->enum('payment_status', ['unpaid', 'paid', 'failed'])->default('unpaid');
+            // Status pembayaran — ini yang menyebabkan error sebelumnya jika tidak ada
+            $table->enum('payment_status', ['unpaid', 'pending', 'paid', 'failed', 'expired', 'refunded'])
+                  ->default('unpaid');
 
-    // Informasi Pengiriman
-    $table->string('shipping_name');
-    $table->string('shipping_address');
-    $table->string('shipping_phone');
+            // Informasi pengiriman
+            $table->string('shipping_name');
+            $table->text('shipping_address'); // text lebih baik untuk alamat panjang
+            $table->string('shipping_phone');
 
-    // Total & Biaya
-    $table->decimal('total_amount', 12, 2);
-    $table->decimal('shipping_cost', 12, 2)->default(0);
+            // Biaya
+            $table->decimal('subtotal', 12, 2);           // opsional: subtotal sebelum ongkir
+            $table->decimal('shipping_cost', 12, 2)->default(0);
+            $table->decimal('total_amount', 12, 2);
 
-    // Midtrans Snap Token
-    $table->string('snap_token')->nullable();
+            // Midtrans
+            $table->string('snap_token')->nullable();
+            $table->string('payment_method')->nullable(); // opsional: simpan metode (credit_card, gopay, dll)
+            $table->json('midtrans_response')->nullable(); // opsional: simpan full response untuk debug
 
-    $table->timestamps();
-});
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('orders');

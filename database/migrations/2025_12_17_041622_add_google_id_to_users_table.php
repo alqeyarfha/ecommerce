@@ -1,44 +1,48 @@
 <?php
 
-// ========================================
-// FILE: database/migrations/xxxx_add_google_id_to_users_table.php
-// FUNGSI: Menambahkan kolom untuk menyimpan Google user ID dan avatar
-// ========================================
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Kolom untuk menyimpan Google ID (unik dari Google OAuth)
-            $table->string('google_id')->nullable()->after('email');
+            // Tambah google_id hanya jika belum ada
+            if (!Schema::hasColumn('users', 'google_id')) {
+                $table->string('google_id')->nullable()->after('email');
+            }
 
-            // Kolom untuk menyimpan URL avatar/foto profil dari Google
-            $table->string('avatar')->nullable()->after('google_id');
+            // Tambah avatar hanya jika belum ada
+            if (!Schema::hasColumn('users', 'avatar')) {
+                $table->string('avatar')->nullable()->after('google_id');
+            }
 
-            // Index untuk mempercepat pencarian berdasarkan google_id
-            $table->index('google_id');
+            // Tambah index hanya jika kolom google_id ada dan belum ada index (Laravel tidak punya hasIndex, jadi kita skip jika error)
+            // Jika index sudah ada, baris ini akan error → bisa dihapus jika tidak kritis
+            if (Schema::hasColumn('users', 'google_id')) {
+                $table->index('google_id');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Hapus index terlebih dahulu (wajib sebelum drop column)
-            $table->dropIndex(['google_id']);
+            // Hapus index jika ada
+            if (Schema::hasColumn('users', 'google_id')) {
+                $table->dropIndex(['google_id']);
+            }
 
-            // Hapus kolom-kolom yang ditambahkan
-            $table->dropColumn(['google_id', 'avatar']);
+            // Hapus kolom jika ada
+            if (Schema::hasColumn('users', 'avatar')) {
+                $table->dropColumn('avatar');
+            }
+
+            if (Schema::hasColumn('users', 'google_id')) {
+                $table->dropColumn('google_id');
+            }
         });
     }
 };

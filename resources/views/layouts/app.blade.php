@@ -35,7 +35,7 @@ FUNGSI: Master layout untuk halaman customer/publik
     {{-- ============================================
     NAVBAR
     ============================================ --}}
-    @include('layouts.partials.navbar')
+    @include('profile.partials.navbar')
 
     {{-- ============================================
     FLASH MESSAGES

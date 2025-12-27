@@ -1,76 +1,71 @@
 <?php
-// app/Http/Controllers/Admin/OrderController.php
+// app/Http/Controllers/OrderController.php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     /**
-     * Menampilkan daftar semua pesanan untuk admin.
-     * Dilengkapi filter by status.
+     * Menampilkan daftar pesanan milik user yang sedang login.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $orders = Order::query()
-            ->with('user') // N+1 prevention: Load data user pemilik order
-            // Fitur Filter Status (?status=pending)
-            ->when($request->status, function($q, $status) {
-                $q->where('status', $status);
-            })
-            ->latest() // Urutkan terbaru
-            ->paginate(20);
+        // PENTING: Jangan gunakan Order::all() !
+        // Kita hanya mengambil order milik user yg sedang login menggunakan relasi hasMany.
+        // auth()->user()->orders() akan otomatis memfilter: WHERE user_id = current_user_id
+        $orders = auth()->user()->orders()
+            ->with(['items.product']) // Eager Load nested: Order -> OrderItems -> Product
+            ->latest() // Urutkan dari pesanan terbaru
+            ->paginate(10);
 
-        return view('admin.orders.index', compact('orders'));
+        return view('orders.index', compact('orders'));
     }
 
     /**
-     * Detail order untuk admin.
+     * Menampilkan detail satu pesanan.
      */
     public function show(Order $order)
+{
+    $order->load(['items', 'user']);
+
+    $snapToken = $order->snap_token; // ambil dulu dari DB
+
+    if ($order->status === 'pending' && !$snapToken) {
+        // Generate baru jika belum ada
+        $midtrans = new \App\Services\MidtransService(); // atau inject
+        $snapToken = $midtrans->createSnapToken($order);
+
+        if ($snapToken) {
+            // SIMPAN KE DATABASE — INI YANG PALING PENTING!
+            $order->update(['snap_token' => $snapToken]);
+        }
+    }
+
+    return view('orders.show', compact('order', 'snapToken'));
+}
+
+    /**
+     * Menampilkan halaman status pembayaran sukses.
+     */
+    public function success(Order $order)
     {
-        // Load item produk dan data user
-        $order->load(['items.product', 'user']);
-        return view('admin.orders.show', compact('order'));
+        if ($order->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+        return view('orders.success', compact('order'));
     }
 
     /**
-     * Update status pesanan (misal: kirim barang)
-     * Handle otomatis pengembalian stok jika status diubah jadi Cancelled.
+     * Menampilkan halaman status pembayaran pending.
      */
-    public function updateStatus(Request $request, Order $order)
+    public function pending(Order $order)
     {
-        // Validasi status yang dikirim form
-        $request->validate([
-            'status' => 'required|in:processing,shipped,delivered,cancelled'
-        ]);
-
-        $oldStatus = $order->status;
-        $newStatus = $request->status === 'completed' ? 'delivered' : $request->status;
-
-        // ============================================================
-        // LOGIKA RESTOCK (PENTING!)
-        // ============================================================
-        // Jika admin membatalkan pesanan, stok barang harus dikembalikan ke gudang.
-        // Syarat:
-        // 1. Status baru adalah 'cancelled'
-        // 2. Status lama BUKAN 'cancelled' (agar tidak restock 2x kalau tombol ditekan berkali-kali)
-        // ============================================================
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-            foreach ($order->items as $item) {
-                // increment() adalah operasi atomik (thread-safe) di level database.
-                // SQL-nya kurang lebih: UPDATE products SET stock = stock + X WHERE id = Y
-                // Ini aman dari Race Condition jika ada transaksi bersamaan.
-                $item->product->increment('stock', $item->quantity);
-            }
+        if ($order->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
-
-        // Update status di database
-        $order->update(['status' => $newStatus]);
-
-        return back()->with('success', "Status pesanan diperbarui menjadi $newStatus");
+        return view('orders.pending', compact('order'));
     }
 }
