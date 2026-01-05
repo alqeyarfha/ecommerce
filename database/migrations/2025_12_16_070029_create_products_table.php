@@ -40,7 +40,9 @@ return new class extends Migration
             $table->index('is_featured');
         });
     }
-
+    Schema::table('products', function (Blueprint $table) {
+    $table->softDeletes();
+    });
     public function down(): void
     {
         Schema::dropIfExists('products');

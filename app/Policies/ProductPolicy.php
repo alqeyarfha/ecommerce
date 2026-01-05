@@ -47,6 +47,10 @@ class ProductPolicy
     {
         return $user->role === 'admin';
     }
+    public function view(User $user, Product $product)
+    {
+        return $user->id === $product->user_id;
+    }
 
     // Tambahkan jika perlu: restore, forceDelete, dll.
 }
