@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MidtransNotificationController;
 use App\Services\MidtransService;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Auth\LoginController;
 // ================================================
 // HALAMAN PUBLIK (Tanpa Login)
 // ================================================
@@ -191,7 +192,7 @@ Route::get('/debug-midtrans', function () {
 });
 // routes/web.php
 
-
+Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 
 Route::middleware('auth')->group(function () {
     // ... routes lainnya
@@ -204,3 +205,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{order}/pending', [PaymentController::class, 'pending'])
         ->name('orders.pending');
 });
+
+

@@ -78,13 +78,11 @@ class OrderService
             } catch (\Exception $e) {
                 // Jika gagal, biarkan snap_token tetap null, bisa di-handle di frontend
             }
-
             // E. BERSIHKAN KERANJANG
             $cart->items()->delete();
             // $cart->delete(); // opsional
 
             return $order;
         });
-        // ==================== DATABASE TRANSACTION END ====================
     }
 }
