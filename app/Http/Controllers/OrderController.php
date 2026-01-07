@@ -28,20 +28,24 @@ class OrderController extends Controller
      * Menampilkan detail satu pesanan.
      */
     public function show(Order $order)
-    {
-        // 1. Authorize (Security Check)
-        // User A TIDAK BOLEH melihat pesanan User B.
-        // Kita cek apakah ID pemilik order sama dengan ID user yang login.
-        if ($order->user_id !== auth()->id()) {
-            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+{
+    $order->load(['items', 'user']);
+
+    $snapToken = $order->snap_token; // ambil dulu dari DB
+
+    if ($order->status === 'pending' && !$snapToken && $order->total_amount > 0) {
+        // Generate baru jika belum ada
+        $midtrans = new \App\Services\MidtransService(); // atau inject
+        $snapToken = $midtrans->createSnapToken($order);
+
+        if ($snapToken) {
+            // SIMPAN KE DATABASE — INI YANG PALING PENTING!
+            $order->update(['snap_token' => $snapToken]);
         }
-
-        // 2. Load relasi detail
-        // Kita butuh data items dan gambar produknya untuk ditampilkan di invoice view.
-        $order->load(['items.product', 'items.product.primaryImage']);
-
-        return view('orders.show', compact('order'));
     }
+
+    return view('orders.show', compact('order', 'snapToken'));
+}
 
     /**
      * Menampilkan halaman status pembayaran sukses.

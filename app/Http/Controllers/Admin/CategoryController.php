@@ -1,13 +1,13 @@
 <?php
-// app/Http/Controllers/Admin/CategoryController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
@@ -23,8 +23,7 @@ class CategoryController extends Controller
             ->latest() // Urutkan dari yang terbaru (created_at desc)
             ->paginate(10); // Batasi 10 item per halaman
 
-        return view('
-        admin.categories.index', compact('categories'));
+        return view('admin.categories.index', compact('categories'));
     }
 
     /**
@@ -37,8 +36,8 @@ class CategoryController extends Controller
             // 'unique:categories': Pastikan nama belum dipakai di tabel categories
             'name' => 'required|string|max:100|unique:categories',
             'description' => 'nullable|string|max:500',
-            // Validasi file gambar (maks 1MB)
-            'image' => 'nullable|image|max:1024',
+            // Validasi file gambar (maks 2MB)
+            'image' => 'nullable|image|max:2048',
             'is_active' => 'boolean',
         ]);
 
@@ -57,6 +56,7 @@ class CategoryController extends Controller
 
         // 4. Simpan ke Database
         Category::create($validated);
+        Cache::forget('global_categories');
 
         return back()->with('success', 'Kategori berhasil ditambahkan!');
     }
@@ -73,7 +73,7 @@ class CategoryController extends Controller
             // Jika tidak dikecualikan, Laravel akan menganggap nama ini duplikat (karena sudah ada di DB milik record ini sendiri).
             'name' => 'required|string|max:100|unique:categories,name,' . $category->id,
             'description' => 'nullable|string|max:500',
-            'image' => 'nullable|image|max:1024',
+            'image' => 'nullable|image|max:2048',
             'is_active' => 'boolean',
         ]);
 
@@ -94,13 +94,11 @@ class CategoryController extends Controller
 
         // 4. Update data di database
         $category->update($validated);
+        Cache::forget('global_categories');
 
         return back()->with('success', 'Kategori berhasil diperbarui!');
     }
 
-    /**
-     * Menghapus kategori.
-     */
     public function destroy(Category $category)
     {
         // 1. Safeguard (Pencegahan)
@@ -118,6 +116,7 @@ class CategoryController extends Controller
 
         // 3. Hapus record dari database
         $category->delete();
+        Cache::forget('global_categories');
 
         return back()->with('success', 'Kategori berhasil dihapus!');
     }

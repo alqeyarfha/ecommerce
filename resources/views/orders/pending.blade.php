@@ -8,4 +8,3 @@
     <a href="{{ route('orders.show', $order) }}" class="btn btn-primary">Lihat Detail Pesanan</a>
 </div>
 @endsection
-    
