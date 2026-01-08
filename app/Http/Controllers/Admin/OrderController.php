@@ -1,71 +1,33 @@
 <?php
-// app/Http/Controllers/OrderController.php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;  // ← Extend base Laravel Controller
 use App\Models\Order;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    /**
-     * Menampilkan daftar pesanan milik user yang sedang login.
-     */
     public function index()
     {
-        // PENTING: Jangan gunakan Order::all() !
-        // Kita hanya mengambil order milik user yg sedang login menggunakan relasi hasMany.
-        // auth()->user()->orders() akan otomatis memfilter: WHERE user_id = current_user_id
-        $orders = auth()->user()->orders()
-            ->with(['items.product']) // Eager Load nested: Order -> OrderItems -> Product
-            ->latest() // Urutkan dari pesanan terbaru
-            ->paginate(10);
-
-        return view('orders.index', compact('orders'));
+        $orders = Order::with('user')->latest()->paginate(20);
+        return view('admin.orders.index', compact('orders'));
     }
 
-    /**
-     * Menampilkan detail satu pesanan.
-     */
     public function show(Order $order)
-{
-    $order->load(['items', 'user']);
-
-    $snapToken = $order->snap_token; // ambil dulu dari DB
-
-    if ($order->status === 'pending' && !$snapToken) {
-        // Generate baru jika belum ada
-        $midtrans = new \App\Services\MidtransService(); // atau inject
-        $snapToken = $midtrans->createSnapToken($order);
-
-        if ($snapToken) {
-            // SIMPAN KE DATABASE — INI YANG PALING PENTING!
-            $order->update(['snap_token' => $snapToken]);
-        }
+    {
+        $order->load(['items.product', 'user']);
+        return view('admin.orders.show', compact('order'));
     }
 
-    return view('orders.show', compact('order', 'snapToken'));
-}
-
-    /**
-     * Menampilkan halaman status pembayaran sukses.
-     */
-    public function success(Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
-        if ($order->user_id !== auth()->id()) {
-            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
-        }
-        return view('orders.success', compact('order'));
-    }
+        $request->validate([
+            'status' => 'required|in:processing,shipped,delivered,cancelled'
+        ]);
 
-    /**
-     * Menampilkan halaman status pembayaran pending.
-     */
-    public function pending(Order $order)
-    {
-        if ($order->user_id !== auth()->id()) {
-            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
-        }
-        return view('orders.pending', compact('order'));
+        $order->update(['status' => $request->status]);
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 }

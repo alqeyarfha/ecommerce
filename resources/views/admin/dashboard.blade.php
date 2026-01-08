@@ -136,17 +136,40 @@
             <h5 class="card-title mb-0">Produk Terlaris</h5>
         </div>
         <div class="card-body">
-            <div class="row g-4">
-                @foreach($topProducts as $product)
-                    <div class="col-6 col-md-2 text-center">
-                        <div class="card h-100 border-0 hover-shadow transition">
-                            <img src="{{ $product->image_url }}" class="card-img-top rounded mb-2" style="max-height: 100px; object-fit: cover;">
-                            <h6 class="card-title text-truncate" style="font-size: 0.9rem">{{ $product->name }}</h6>
-                            <small class="text-muted">{{ $product->sold }} terjual</small>
+            @if($topProducts->isEmpty())
+                <p class="text-muted text-center py-5">
+                    Belum ada data penjualan.<br>
+                    <small class="text-muted">
+                        Buat order test dan simulasi pembayaran sukses di Midtrans Simulator untuk melihat data di sini.
+                    </small>
+                </p>
+            @else
+                <div class="row g-4 justify-content-start">
+                    @foreach($topProducts as $product)
+                        <div class="col-6 col-md-4 col-lg-2 text-center">
+                            <div class="card h-100 border-0 shadow-sm hover-shadow transition">
+                                {{-- Gambar dengan fallback default --}}
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/default-product.png') }}"
+                                     class="card-img-top rounded mx-auto mt-3"
+                                     style="width: 120px; height: 120px; object-fit: cover;"
+                                     alt="{{ $product->name }}">
+
+                                <div class="card-body py-3">
+                                    <h6 class="card-title text-truncate mb-1" style="font-size: 0.9rem;">
+                                        {{ $product->name }}
+                                    </h6>
+                                    <p class="text-muted small mb-1">
+                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                    </p>
+                                    <p class="fw-bold text-primary mb-0">
+                                        {{ $product->sold }} terjual
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 
@@ -155,21 +178,25 @@
     <script>
         const ctx = document.getElementById('revenueChart').getContext('2d');
 
-        // Data dari Controller (Blade to JS)
-        const labels = {!! json_encode($revenueChart->pluck('date')) !!};
-        const data = {!! json_encode($revenueChart->pluck('total')) !!};
+        // Data dari Controller
+        const rawLabels = @json($revenueChart->pluck('date'));
+        const labels = rawLabels.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        });
+        const data = @json($revenueChart->pluck('total'));
 
         new Chart(ctx, {
-            type: 'line', // Jenis grafik: Line chart
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Pendapatan (Rp)',
                     data: data,
-                    borderColor: '#0d6efd', // Bootstrap Primary Color
+                    borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     borderWidth: 2,
-                    tension: 0.3, // Membuat garis sedikit melengkung (smooth)
+                    tension: 0.3,
                     fill: true,
                     pointRadius: 4,
                     pointHoverRadius: 6
@@ -177,15 +204,12 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Penting agar Chart menyesuaikan container
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-Customize Chrome
-
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                // Format Tooltip jadi Rupiah
                                 return 'Rp ' + new Intl.NumberFormat('id-ID').format(context.raw);
                             }
                         }

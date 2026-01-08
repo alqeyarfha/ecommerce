@@ -44,6 +44,7 @@
         <div class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0">Katalog Produk</h4>
+
                 {{-- Sorting --}}
                 <form method="GET" class="d-inline-block">
                     @foreach(request()->except('sort') as $key => $value)
@@ -72,7 +73,8 @@
             </div>
 
             <div class="mt-4">
-                {{ $products->links() }}
+                {{-- Bagian baris 75 yang sebelumnya error --}}
+                {{ $products->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
