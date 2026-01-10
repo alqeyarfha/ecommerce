@@ -118,9 +118,20 @@
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="button" class="btn btn-danger" onclick="deleteProduct({{ $product->id }})">
-                            <i class="bi bi-trash"></i> Hapus Permanen
-                        </button>
+
+                        <!-- Form dengan method spoofing -->
+                        <form id="deleteForm{{ $product->id }}"
+                              action="{{ route('admin.products.destroy', $product->id) }}"
+                              method="POST"
+                              class="d-inline">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="button" class="btn btn-danger"
+                                    onclick="deleteProduct({{ $product->id }})">
+                                <i class="bi bi-trash"></i> Hapus Permanen
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -128,56 +139,53 @@
     @endforeach
 @endsection
 
-{{-- Script untuk hapus produk via AJAX --}}
 @push('scripts')
 <script>
     function deleteProduct(id) {
-        // Konfirmasi tambahan (fallback kalau modal sudah cukup)
-        if (!confirm('Yakin ingin menghapus produk ini secara permanen?')) {
+        if (!confirm('Yakin ingin menghapus produk ini secara permanen? Ini tidak dapat dibatalkan.')) {
             return;
         }
 
-        const token = document.querySelector('meta[name="csrf-token"]')?.content;
-
-        if (!token) {
-            alert('CSRF token tidak ditemukan. Refresh halaman dan coba lagi.');
+        const form = document.getElementById(`deleteForm${id}`);
+        if (!form) {
+            alert('Form tidak ditemukan!');
             return;
         }
 
-        fetch(`/admin/products/${id}`, {
-            method: 'DELETE',
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',  // Selalu POST, Laravel akan baca _method=DELETE
+            body: formData,
             headers: {
-                'X-CSRF-TOKEN': token,
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                // Jangan set Content-Type karena FormData akan otomatis set multipart/form-data
             }
         })
         .then(response => {
-            if (response.ok) {
-                // Hapus baris dari tabel
-                const row = document.querySelector(`tr[data-product-id="${id}"]`);
-                if (row) row.remove();
-
-                // Tutup modal
-                const modalEl = document.getElementById(`deleteModal${id}`);
-                if (modalEl) {
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                }
-
-                alert('Produk berhasil dihapus!');
-            } else {
-                // Coba ambil pesan error dari server
-                response.json().then(data => {
-                    alert(data.message || 'Gagal menghapus produk.');
-                }).catch(() => {
-                    alert('Gagal menghapus produk (error server).');
-                });
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
             }
+            return response.json();
+        })
+        .then(data => {
+            // Hapus baris dari tabel
+            const row = document.querySelector(`tr[data-product-id="${id}"]`);
+            if (row) row.remove();
+
+            // Tutup modal
+            const modalEl = document.getElementById(`deleteModal${id}`);
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+
+            alert(data.message || 'Produk berhasil dihapus permanen!');
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
+            const message = error.message || 'Gagal menghapus produk. Silakan coba lagi.';
+            alert(message);
         });
     }
 </script>

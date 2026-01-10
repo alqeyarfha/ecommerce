@@ -17,11 +17,9 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow">
                 <li><a class="dropdown-item active" href="#" data-theme="vibrant">Vibrant Crystal</a></li>
-                <li><a class="dropdown-item" href="#" data-theme="purple">Purple Luxury</a></li>
                 <li><a class="dropdown-item" href="#" data-theme="dark">Dark Glitter</a></li>
                 <li><a class="dropdown-item" href="#" data-theme="golden">Golden Elegance</a></li>
                 <li><a class="dropdown-item" href="#" data-theme="blue-fabric">Blue Fabric</a></li>
-                <li><a class="dropdown-item" href="#" data-theme="minimal">Minimal White</a></li>
             </ul>
         </div>
     </div>
@@ -34,7 +32,7 @@
         <div class="container position-relative z-index-2">
             <div class="row justify-content-start">
                 <div class="col-lg-6 text-white">
-                    <h1 class="display-3 fw-bold mb-4 text-shadow">
+                    <h1 class="display-3 fw-bold mb-44f text-shadow">
                         Temukan Aroma yang Mencerminkan Dirimu
                     </h1>
                     <p class="lead mb-5 opacity-90 text-shadow">
